@@ -1,6 +1,8 @@
-FROM node:16
+#build stage
 
-WORKDIR /aleksander/src/app
+FROM node:16 as build 
+
+WORKDIR /app
 
 COPY package*.json ./
 
@@ -10,6 +12,23 @@ COPY . .
 
 RUN npm run build
 
-EXPOSE 8080
 
-CMD ["node", "dist/main"]
+# prod stage
+
+FROM node:16.0
+
+WORKDIR /app
+
+ARG NODE_ENV_PRODUCTION=production
+
+ENV NODE_ENV=${NODE_ENV_PRODUCTION}
+
+COPY --from=build /app/dist ./dist
+
+COPY package*.json .
+
+RUN npm install --only=production
+
+EXPOSE 3000
+
+CMD npm run start:prod
